@@ -1,0 +1,120 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #40455f 0%, #59c2b2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+header { text-align: center; margin-bottom: 30px; }
+header h1 { color: #667eea; font-size: 2.5rem; }
+header p { color: #666; }
+
+#search-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#word-input {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+#word-input:focus { border-color: #667eea; outline: none; }
+
+#search-btn {
+    padding: 15px 25px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+#search-btn:hover { background: #5a6fd8; transform: translateY(-2px); }
+
+.hidden { display: none; }
+
+#error {
+    background: #ffebee;
+    color: #c62828;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+#results { margin-top: 20px; }
+
+.word-card {
+    background: #f8f9ff;
+    border-left: 4px solid #667eea;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.word-title {
+    font-size: 2rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.phonetic { color: #666; font-style: italic; }
+
+.audio-btn, .save-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.save-btn.saved { background: #4caf50; }
+
+.meaning { margin-top: 15px; }
+.part-of-speech { font-weight: bold; color: #764ba2; text-transform: capitalize; }
+.definition { margin: 8px 0 8px 20px; }
+.example { color: #666; font-style: italic; margin-left: 20px; }
+.synonyms { margin-top: 10px; color: #667eea; }
+
+#favorites-section {
+    margin-top: 40px;
+    border-top: 2px solid #eee;
+    padding-top: 20px;
+}
+
+.fav-tag {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    margin: 5px;
+    cursor: pointer;
+}

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordly - Dictionary SPA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Wordly</h1>
+            <p>Your interactive dictionary</p>
+        </header>
+
+        <form id="search-form" aria-label="Search dictionary">
+            <input 
+                type="text" 
+                id="word-input" 
+                placeholder="Search for a word (e.g., hello)" 
+                aria-label="Word to search"
+                required
+            >
+            <button type="submit" id="search-btn">Search</button>
+        </form>
+
+        <div id="loading" class="hidden">Searching...</div>
+        <div id="error" class="hidden"></div>
+        <div id="results"></div>
+
+        <section id="favorites-section">
+            <h3>Saved Words</h3>
+            <div id="favorites-list">No saved words yet</div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
