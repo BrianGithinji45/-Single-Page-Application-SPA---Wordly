@@ -1,142 +1,146 @@
-const searchForm = document.getElementById('search-form');
-const wordInput = document.getElementById('word-input');
-const resultsDiv = document.getElementById('results');
-const errorDiv = document.getElementById('error');
-const loadingDiv = document.getElementById('loading');
-const favoritesList = document.getElementById('favorites-list');
+const searchForm = document.querySelector("#search-form");
+const wordInput = document.querySelector("#word-input");
+const divDisplay = document.querySelector("#dataDisplay") || document.querySelector("#results");
+const errorDiv = document.querySelector("#error");
+const loadingDiv = document.querySelector("#loading");
+const favList = document.querySelector("#favorites-list");
 
-const API_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
-let favorites = JSON.parse(localStorage.getItem('wordlyFavorites')) || [];
+const API = "https://api.dictionaryapi.dev/api/v2/entries/en/";
 
-displayFavorites();
+displayFavs();
 
-searchForm.addEventListener('submit', async (e) => {
+searchForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const word = wordInput.value.trim();
-    if (!word) {
-        showError('Please enter a word');
-        return;
-    }
-    await fetchWord(word);
+    if (!word) return;
+    await fetchWordData(API + word);
 });
 
-async function fetchWord(word) {
+async function fetchWordData(APIURL){
     try {
-        showLoading(true);
-        hideError();
-        resultsDiv.innerHTML = '';
-
-        const response = await fetch(`${API_URL}${word}`);
-        if (!response.ok) throw new Error('Word not found');
-
+        if (loadingDiv) loadingDiv.classList.remove("hidden");
+        if (errorDiv) errorDiv.classList.add("hidden");
+        if (divDisplay) divDisplay.innerHTML = "";
+        const response = await fetch(APIURL);
+        if (!response.ok) throw new Error("Word not found");
         const data = await response.json();
-        displayWord(data[0]);
-    } catch (err) {
-        showError(`Could not find "${word}". Try hello, world, dictionary`);
+        renderWordDetails(data[0]);
+    } catch(error){
+        if (errorDiv) {
+            errorDiv.textContent = "Word not found. Try: hello, world, love";
+            errorDiv.classList.remove("hidden");
+        }
     } finally {
-        showLoading(false);
+        if (loadingDiv) loadingDiv.classList.add("hidden");
     }
 }
 
-function displayWord(data) {
-    const word = data.word;
-    const phonetic = data.phonetics.find(p => p.text)?.text || '';
-    
-    // FIXED: Find first non-empty audio
-    const phoneticWithAudio = data.phonetics.find(p => p.audio && p.audio.length > 10);
-    const audio = phoneticWithAudio ? phoneticWithAudio.audio : '';
+function renderWordDetails(data){
+    const searchValue = data.word;
+    const wordpara = document.createElement("p");
+    wordpara.textContent = searchValue;
+    wordpara.style.fontSize = "2rem";
+    wordpara.style.fontWeight = "bold";
+    const phoneticText = data.phonetics.find(p => p.text)?.text || "";
+    const phoneticPara = document.createElement("p");
+    phoneticPara.textContent = phoneticText;
+    phoneticPara.style.fontStyle = "italic";
+    phoneticPara.style.color = "#777";
+    divDisplay.appendChild(wordpara);
+    divDisplay.appendChild(phoneticPara);
 
-    const meaningsHtml = data.meanings.map(meaning => {
-        const definitionsHtml = meaning.definitions.map(def => `
-            <div class="definition">• ${def.definition}</div>
-            ${def.example ? `<div class="example">"${def.example}"</div>` : ''}
-        `).join('');
-
-        const synonyms = [...new Set(
-            meaning.definitions.flatMap(d => d.synonyms || [])
-        )].slice(0, 5).join(', ');
-
-        return `
-            <div class="meaning">
-                <div class="part-of-speech">${meaning.partOfSpeech}</div>
-                ${definitionsHtml}
-                ${synonyms ? `<div class="synonyms"><strong>Synonyms:</strong> ${synonyms}</div>` : ''}
-            </div>
-        `;
-    }).join('');
-
-    resultsDiv.innerHTML = `
-        <div class="word-card">
-            <div class="word-title">
-                ${word}
-                <span class="phonetic">${phonetic}</span>
-            </div>
-            ${audio 
-                ? `<button class="audio-btn" onclick="playAudio('${audio}')">🔊 Play Pronunciation</button>` 
-                : '<p style="color:#999;margin-top:10px;">No audio available - try hello, water, dictionary</p>'
+    data.meanings.forEach(m => {
+        const pos = document.createElement("h4");
+        pos.textContent = m.partOfSpeech;
+        pos.style.color = "#764ba2";
+        pos.style.textTransform = "capitalize";
+        pos.style.marginTop = "12px";
+        divDisplay.appendChild(pos);
+        m.definitions.forEach(d => {
+            const defP = document.createElement("p");
+            defP.textContent = `• ${d.definition}`;
+            defP.style.marginLeft = "18px";
+            divDisplay.appendChild(defP);
+            if (d.example) {
+                const exP = document.createElement("p");
+                exP.textContent = `"${d.example}"`;
+                exP.style.fontStyle = "italic";
+                exP.style.color = "#666";
+                exP.style.marginLeft = "18px";
+                divDisplay.appendChild(exP);
             }
-            <button class="save-btn ${favorites.includes(word) ? 'saved' : ''}" onclick="toggleFavorite('${word}')">
-                ${favorites.includes(word) ? '★ Saved' : '☆ Save Word'}
-            </button>
-            ${meaningsHtml}
-        </div>
-    `;
-}
-
-function playAudio(url) {
-    console.log("Playing:", url);
-    if (!url) {
-        showError("No audio for this word");
-        return;
-    }
-    const audio = new Audio(url);
-    audio.play().catch(err => {
-        console.error(err);
-        // Fallback - Web Speech API
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(
-                document.querySelector('.word-title').childNodes[0].textContent.trim()
-            );
-            speechSynthesis.speak(utterance);
-        } else {
-            showError("Audio blocked by browser. Check volume and try again.");
+        });
+        const synonyms = [...new Set(m.definitions.flatMap(x => x.synonyms || []))].slice(0,5);
+        if (synonyms.length) {
+            const synP = document.createElement("p");
+            synP.textContent = `Synonyms: ${synonyms.join(", ")}`;
+            synP.style.color = "#667eea";
+            divDisplay.appendChild(synP);
         }
     });
+
+    const audioObj = data.phonetics.find(p => p.audio && p.audio.length > 10);
+    if (audioObj) {
+        const audioBtn = document.createElement("button");
+        audioBtn.textContent = "🔊 Play Pronunciation";
+        audioBtn.style.marginTop = "10px";
+        audioBtn.onclick = () => {
+            const audio = new Audio(audioObj.audio);
+            audio.play().catch(() => {
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.speak(new SpeechSynthesisUtterance(searchValue));
+                }
+            });
+        };
+        divDisplay.appendChild(audioBtn);
+    }
+
+    let favs = JSON.parse(localStorage.getItem("wordlyFavorites")) || [];
+    const isSaved = favs.includes(searchValue);
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = isSaved ? "★ Saved" : "☆ Save";
+    saveBtn.style.marginLeft = "10px";
+    saveBtn.onclick = () => {
+        let current = JSON.parse(localStorage.getItem("wordlyFavorites")) || [];
+        if (current.includes(searchValue)) {
+            current = current.filter(x => x !== searchValue);
+            saveBtn.textContent = "☆ Save";
+        } else {
+            current.push(searchValue);
+            saveBtn.textContent = "★ Saved";
+        }
+        localStorage.setItem("wordlyFavorites", JSON.stringify(current));
+        displayFavs();
+    };
+    divDisplay.appendChild(saveBtn);
 }
 
-function toggleFavorite(word) {
-    if (favorites.includes(word)) {
-        favorites = favorites.filter(w => w !== word);
-    } else {
-        favorites.push(word);
-    }
-    localStorage.setItem('wordlyFavorites', JSON.stringify(favorites));
-    displayFavorites();
-    const btn = document.querySelector('.save-btn');
-    if (btn) {
-        btn.textContent = favorites.includes(word) ? '★ Saved' : '☆ Save Word';
-        btn.classList.toggle('saved', favorites.includes(word));
-    }
-}
-
-function displayFavorites() {
-    if (favorites.length === 0) {
-        favoritesList.innerHTML = 'No saved words yet';
+function displayFavs(){
+    if (!favList) return;
+    let favs = JSON.parse(localStorage.getItem("wordlyFavorites")) || [];
+    if (favs.length === 0) {
+        favList.innerHTML = "No saved words yet";
         return;
     }
-    favoritesList.innerHTML = favorites.map(w => 
-        `<span class="fav-tag" onclick="fetchWord('${w}')">${w}</span>`
-    ).join('');
+    favList.innerHTML = "";
+    favs.forEach(w => {
+        const tag = document.createElement("span");
+        tag.className = "fav-tag";
+        tag.textContent = w;
+        tag.onclick = () => {
+            wordInput.value = w;
+            fetchWordData(API + w);
+        };
+        const del = document.createElement("b");
+        del.textContent = " ×";
+        del.onclick = (e) => {
+            e.stopPropagation();
+            let updated = JSON.parse(localStorage.getItem("wordlyFavorites")) || [];
+            updated = updated.filter(x => x !== w);
+            localStorage.setItem("wordlyFavorites", JSON.stringify(updated));
+            displayFavs();
+        };
+        tag.appendChild(del);
+        favList.appendChild(tag);
+    });
 }
-
-function showError(msg) {
-    errorDiv.textContent = msg;
-    errorDiv.classList.remove('hidden');
-}
-
-function hideError() { errorDiv.classList.add('hidden'); }
-function showLoading(show) { loadingDiv.classList.toggle('hidden', !show); }
-
-window.playAudio = playAudio;
-window.toggleFavorite = toggleFavorite;
-window.fetchWord = fetchWord;
